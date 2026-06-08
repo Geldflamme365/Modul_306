@@ -1,3 +1,11 @@
-node_modules/
-.env
-data/apps.json
+# VS Code local settings
+.vscode/
+
+# Windows shortcut files
+*.lnk
+
+# Markdown documentation files
+*.md
+
+# macOS system files (good practice)
+.DS_Store
