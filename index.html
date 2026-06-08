@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arcade Hub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  
+  <!-- Top Header -->
+  <header class="main-header">
+    <div class="logo">
+      <h1>🎮 ArcadeHub</h1>
+    </div>
+    <div class="header-actions">
+      <!-- Options / Profile Button -->
+      <button class="icon-btn" id="options-toggle-btn" aria-label="Menu" title="Menu &amp; Upload">
+        ⚙️
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Grid Area -->
+  <main class="main-content">
+    <div id="apps-list" class="apps-list">
+      <p style="opacity: 0.5;">Loading games...</p>
+    </div>
+  </main>
+
+  <!-- Options Overlay (Hidden by default) -->
+  <div class="options-overlay hidden" id="options-overlay">
+    <div class="options-sidebar">
+      <div class="sidebar-header">
+        <h2>Settings &amp; Upload</h2>
+        <button class="close-sidebar" id="close-options-btn">&times;</button>
+      </div>
+      <div class="panels">
+
+        <!-- Auth Panel -->
+        <section class="panel" id="auth-panel">
+          <div class="panel-head">
+            <h2>Account</h2>
+            <span class="badge" id="auth-status-badge">Logged Out</span>
+          </div>
+          <div id="auth-logged-out">
+            <form id="auth-form" class="publish-form" style="margin-bottom: 0;">
+              <label>
+                Email
+                <input type="email" id="auth-email" required placeholder="you@domain.com">
+              </label>
+              <label>
+                Password
+                <input type="password" id="auth-password" required placeholder="••••••••">
+              </label>
+              <div class="actions">
+                <button type="submit" id="login-btn" class="btn btn-secondary">Login</button>
+                <button type="button" id="register-btn" class="btn btn-primary">Register</button>
+              </div>
+            </form>
+            <div id="auth-result" class="result"></div>
+          </div>
+          <div id="auth-logged-in" class="hidden">
+            <p>Logged in as <strong id="auth-user-email"></strong></p>
+            <button id="logout-btn" class="btn btn-secondary" style="margin-top: 10px;">Sign Out</button>
+          </div>
+        </section>
+
+        <!-- Publish Panel -->
+        <section class="panel" id="publish-panel">
+          <div class="panel-head">
+            <h2 id="publish-panel-title">Create App</h2>
+            <span class="badge">AI Validated</span>
+          </div>
+          <!-- Edit Mode Banner -->
+          <div id="edit-mode-banner" class="edit-mode-banner hidden">
+            <span class="edit-mode-icon">✏️</span>
+            <span>Editing: <strong id="edit-mode-title"></strong></span>
+          </div>
+          <form id="publish-form" class="publish-form">
+            <label>
+              App Title
+              <input type="text" id="title" required placeholder="My Amazing Game">
+            </label>
+            <label>
+              Description
+              <input type="text" id="description" placeholder="A short description">
+            </label>
+            
+            <div class="drop-zone-container">
+              <label>Game Files (Drag &amp; Drop Folder)</label>
+              <div id="drop-zone" class="drop-zone">
+                <div class="drop-content">
+                  <span class="drop-icon">📂</span>
+                  <p>Drag &amp; Drop your game folder here</p>
+                  <small>Includes HTML, CSS, and JS</small>
+                </div>
+                <input type="file" id="file-upload" webkitdirectory directory multiple>
+              </div>
+            </div>
+
+            <label>
+              Or Write / Paste Raw HTML Code
+              <textarea id="html" required placeholder="<html>...</html>"></textarea>
+            </label>
+            <div class="actions publish-actions">
+              <button type="button" id="preview-btn" class="btn btn-secondary" style="width: 100%; font-size: 1.05rem; padding: 0.85rem;">👁️ Preview App</button>
+              <button type="submit" id="publish-btn" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1rem;">🚀 Review &amp; Publish</button>
+              <button type="button" id="cancel-edit-btn" class="btn btn-danger hidden" style="width: 100%; font-size: 1rem; padding: 0.85rem;">✖ Cancel Edit</button>
+            </div>
+          </form>
+          <div id="review-result" class="result"></div>
+        </section>
+
+        <!-- My Projects Panel -->
+        <section class="panel hidden" id="my-projects-panel">
+          <div class="panel-head">
+            <h2>My Projects</h2>
+          </div>
+          <div id="my-projects-list" class="apps-list">
+            <p style="opacity: 0.5;">No projects yet.</p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Viewer (Full Screen Overlay) -->
+  <div class="viewer-content hidden" id="viewer-content">
+    <header class="viewer-header">
+      <h2 id="viewer-title">App Name</h2>
+      <button id="close-viewer-btn" class="btn btn-secondary">Exit Game</button>
+    </header>
+    <iframe id="app-iframe" sandbox="allow-scripts allow-forms allow-modals allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"></iframe>
+  </div>
+
+  <!-- Hidden placeholder to prevent app.js from breaking when it searches for this ID -->
+  <div id="viewer-placeholder" class="hidden"></div> 
+
+  <!-- App Card Template -->
+  <template id="app-card-template">
+    <article class="app-card" tabindex="0">
+      <div class="squircle-icon">
+        <div class="preview-viewport" aria-hidden="true">
+          <iframe class="app-preview" title="App preview" sandbox="allow-scripts allow-forms"></iframe>
+        </div>
+        <span class="icon-text">🕹️</span>
+      </div>
+      <div class="app-info">
+        <h3 class="app-title"></h3>
+        <p class="app-description"></p>
+      </div>
+    </article>
+  </template>
+
+  <!-- My Project Card Template (Inside Sidebar) -->
+  <template id="my-project-card-template">
+    <div class="app-card my-project-card">
+      <div class="app-info my-project-info">
+        <h3 class="app-title my-project-title"></h3>
+      </div>
+      <div class="app-actions my-project-actions">
+        <button class="btn btn-small btn-primary app-play">Play</button>
+        <button class="btn btn-small btn-secondary app-edit">Edit</button>
+        <button class="btn btn-small btn-danger app-delete">Delete</button>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // Handle the Options sidebar toggle independently from app.js
+    const optionsOverlay = document.getElementById('options-overlay');
+    document.getElementById('options-toggle-btn').addEventListener('click', () => {
+      optionsOverlay.classList.remove('hidden');
+    });
+    document.getElementById('close-options-btn').addEventListener('click', () => {
+      optionsOverlay.classList.add('hidden');
+    });
+    // Close on clicking outside the sidebar
+    optionsOverlay.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        optionsOverlay.classList.add('hidden');
+      }
+    });
+  </script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
