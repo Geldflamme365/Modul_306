@@ -35,6 +35,7 @@ let editingDocId = null;
 const form = document.getElementById("publish-form");
 const submitBtn = document.getElementById("publish-btn");
 const previewBtn = document.getElementById("preview-btn");
+const openStudioBtn = document.getElementById("open-studio-btn");
 const cancelEditBtn = document.getElementById("cancel-edit-btn");
 const editModeBanner = document.getElementById("edit-mode-banner");
 const editModeTitle = document.getElementById("edit-mode-title");
@@ -49,6 +50,18 @@ const viewerContent = document.getElementById("viewer-content");
 const appIframe = document.getElementById("app-iframe");
 const closeViewerBtn = document.getElementById("close-viewer-btn");
 const viewerTitle = document.getElementById("viewer-title");
+
+// Code Studio Elements
+const codeStudio = document.getElementById("code-studio");
+const closeStudioBtn = document.getElementById("close-studio-btn");
+const toggleLivePreviewBtn = document.getElementById("toggle-live-preview-btn");
+const studioCode = document.getElementById("studio-code");
+const studioPreview = document.getElementById("studio-preview");
+const lineNumbers = document.getElementById("line-numbers");
+const previewWidthRange = document.getElementById("preview-width-range");
+const previewWidthOutput = document.getElementById("preview-width-output");
+
+let studioPreviewTimer = null;
 
 // Auth Elements
 const authForm = document.getElementById("auth-form");
@@ -193,14 +206,15 @@ async function processFiles(files) {
     }
     
     htmlTextarea.value = htmlContent;
+    syncStudioFromTextarea();
     dropZone.querySelector('p').textContent = `Loaded ${fileArray.length} files!`;
     dropZone.querySelector('p').style.color = '#10b981';
-    dropZone.querySelector('.drop-icon').textContent = '✅';
+    dropZone.querySelector('.drop-icon').textContent = 'DONE';
   } else {
     alert("No HTML file found in the dropped folder!");
     dropZone.querySelector('p').textContent = `No HTML found!`;
     dropZone.querySelector('p').style.color = '#ef4444';
-    dropZone.querySelector('.drop-icon').textContent = '⚠️';
+    dropZone.querySelector('.drop-icon').textContent = '!';
   }
 }
 
@@ -319,13 +333,104 @@ function showResult(isSuccess, message) {
   resultBox.className = `result ${isSuccess ? "true" : "false"}`;
 }
 
+// --- CODE STUDIO LOGIC ---
+function updateLineNumbers() {
+  if (!studioCode || !lineNumbers) return;
+  const lineCount = Math.max(1, studioCode.value.split("\n").length);
+  lineNumbers.textContent = Array.from({ length: lineCount }, (_, index) => index + 1).join("\n");
+  lineNumbers.scrollTop = studioCode.scrollTop;
+}
+
+function updateStudioPreview() {
+  if (!studioPreview || !studioCode) return;
+  studioPreview.srcdoc = studioCode.value;
+}
+
+function scheduleStudioPreview() {
+  clearTimeout(studioPreviewTimer);
+  studioPreviewTimer = setTimeout(updateStudioPreview, 180);
+}
+
+function syncStudioFromTextarea() {
+  if (!studioCode || !htmlTextarea) return;
+  studioCode.value = htmlTextarea.value;
+  updateLineNumbers();
+  updateStudioPreview();
+}
+
+function syncTextareaFromStudio() {
+  if (!studioCode || !htmlTextarea) return;
+  htmlTextarea.value = studioCode.value;
+}
+
+function openCodeStudio() {
+  if (!codeStudio) return;
+  syncStudioFromTextarea();
+  codeStudio.classList.remove("hidden");
+  document.body.classList.add("studio-open");
+  requestAnimationFrame(() => studioCode?.focus());
+}
+
+function closeCodeStudio() {
+  if (!codeStudio) return;
+  syncTextareaFromStudio();
+  codeStudio.classList.add("hidden");
+  document.body.classList.remove("studio-open");
+}
+
+function updatePreviewWidth() {
+  if (!studioPreview || !previewWidthRange || !previewWidthOutput) return;
+  const width = `${previewWidthRange.value}px`;
+  studioPreview.style.width = width;
+  previewWidthOutput.textContent = width;
+}
+
+openStudioBtn?.addEventListener("click", openCodeStudio);
+closeStudioBtn?.addEventListener("click", closeCodeStudio);
+
+toggleLivePreviewBtn?.addEventListener("click", () => {
+  if (!codeStudio || !toggleLivePreviewBtn) return;
+  codeStudio.classList.toggle("preview-hidden");
+  const isHidden = codeStudio.classList.contains("preview-hidden");
+  toggleLivePreviewBtn.textContent = isHidden ? "Show Preview" : "Hide Preview";
+  if (!isHidden) updateStudioPreview();
+});
+
+studioCode?.addEventListener("input", () => {
+  syncTextareaFromStudio();
+  updateLineNumbers();
+  scheduleStudioPreview();
+});
+
+studioCode?.addEventListener("scroll", () => {
+  if (lineNumbers) lineNumbers.scrollTop = studioCode.scrollTop;
+});
+
+studioCode?.addEventListener("keydown", (event) => {
+  if (event.key !== "Tab") return;
+  event.preventDefault();
+  const start = studioCode.selectionStart;
+  const end = studioCode.selectionEnd;
+  studioCode.setRangeText("  ", start, end, "end");
+  studioCode.dispatchEvent(new Event("input", { bubbles: true }));
+});
+
+htmlTextarea?.addEventListener("input", () => {
+  if (codeStudio && !codeStudio.classList.contains("hidden")) {
+    syncStudioFromTextarea();
+  }
+});
+
+previewWidthRange?.addEventListener("input", updatePreviewWidth);
+updatePreviewWidth();
+
 // --- PREVIEW LOGIC ---
 previewBtn.addEventListener("click", () => {
   const html = document.getElementById("html").value;
   const title = document.getElementById("title").value.trim() || "Preview";
 
   if (!html.trim()) {
-    showResult(false, "Nothing to preview — add some HTML code first.");
+    showResult(false, "Nothing to preview - add some HTML code first.");
     return;
   }
 
@@ -334,7 +439,7 @@ previewBtn.addEventListener("click", () => {
   if (optionsOverlay) optionsOverlay.classList.add("hidden");
 
   // Open the viewer with a special preview ID (not a real Firestore doc)
-  openAppViewer("__preview__", `👁️ Preview: ${title}`, html);
+  openAppViewer("__preview__", `Preview: ${title}`, html);
 });
 
 // --- EDIT MODE LOGIC ---
@@ -345,10 +450,11 @@ function enterEditMode(docId, data) {
   document.getElementById("title").value = data.title || "";
   document.getElementById("description").value = data.description || "";
   document.getElementById("html").value = data.html || "";
+  syncStudioFromTextarea();
 
   // Update UI to show edit mode
   publishPanelTitle.textContent = "Edit App";
-  submitBtn.textContent = "💾 Save Changes";
+  submitBtn.textContent = "Save Changes";
   cancelEditBtn.classList.remove("hidden");
   editModeBanner.classList.remove("hidden");
   editModeTitle.textContent = data.title || "Untitled";
@@ -356,6 +462,7 @@ function enterEditMode(docId, data) {
   // Scroll the publish panel into view
   const publishPanel = document.getElementById("publish-panel");
   if (publishPanel) publishPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+  openCodeStudio();
 
   showResult(null, "");
 }
@@ -365,7 +472,7 @@ function exitEditMode() {
 
   // Reset UI
   publishPanelTitle.textContent = "Create App";
-  submitBtn.textContent = "🚀 Review & Publish";
+  submitBtn.textContent = "Review & Publish";
   cancelEditBtn.classList.add("hidden");
   editModeBanner.classList.add("hidden");
   editModeTitle.textContent = "";
@@ -380,7 +487,7 @@ function resetDropZone() {
   const dropZoneIcon = document.querySelector('.drop-icon');
   const dropZoneText = document.querySelector('.drop-content p');
   if (dropZoneIcon && dropZoneText) {
-    dropZoneIcon.textContent = '📂';
+    dropZoneIcon.textContent = 'FILES';
     dropZoneText.textContent = 'Drag & Drop your game folder here';
     dropZoneText.style.color = '';
   }

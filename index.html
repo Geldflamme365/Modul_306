@@ -7,37 +7,30 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  
-  <!-- Top Header -->
   <header class="main-header">
     <div class="logo">
-      <h1>🎮 ArcadeHub</h1>
+      <h1>ArcadeHub</h1>
     </div>
     <div class="header-actions">
-      <!-- Options / Profile Button -->
       <button class="icon-btn" id="options-toggle-btn" aria-label="Menu" title="Menu &amp; Upload">
-        ⚙️
+        Menu
       </button>
     </div>
   </header>
 
-  <!-- Main Grid Area -->
   <main class="main-content">
     <div id="apps-list" class="apps-list">
       <p style="opacity: 0.5;">Loading games...</p>
     </div>
   </main>
 
-  <!-- Options Overlay (Hidden by default) -->
   <div class="options-overlay hidden" id="options-overlay">
     <div class="options-sidebar">
       <div class="sidebar-header">
         <h2>Settings &amp; Upload</h2>
-        <button class="close-sidebar" id="close-options-btn">&times;</button>
+        <button class="close-sidebar" id="close-options-btn" aria-label="Close settings">&times;</button>
       </div>
       <div class="panels">
-
-        <!-- Auth Panel -->
         <section class="panel" id="auth-panel">
           <div class="panel-head">
             <h2>Account</h2>
@@ -51,7 +44,7 @@
               </label>
               <label>
                 Password
-                <input type="password" id="auth-password" required placeholder="••••••••">
+                <input type="password" id="auth-password" required placeholder="........">
               </label>
               <div class="actions">
                 <button type="submit" id="login-btn" class="btn btn-secondary">Login</button>
@@ -66,15 +59,13 @@
           </div>
         </section>
 
-        <!-- Publish Panel -->
         <section class="panel" id="publish-panel">
           <div class="panel-head">
             <h2 id="publish-panel-title">Create App</h2>
             <span class="badge">AI Validated</span>
           </div>
-          <!-- Edit Mode Banner -->
           <div id="edit-mode-banner" class="edit-mode-banner hidden">
-            <span class="edit-mode-icon">✏️</span>
+            <span class="edit-mode-icon">EDIT</span>
             <span>Editing: <strong id="edit-mode-title"></strong></span>
           </div>
           <form id="publish-form" class="publish-form">
@@ -86,12 +77,12 @@
               Description
               <input type="text" id="description" placeholder="A short description">
             </label>
-            
+
             <div class="drop-zone-container">
               <label>Game Files (Drag &amp; Drop Folder)</label>
               <div id="drop-zone" class="drop-zone">
                 <div class="drop-content">
-                  <span class="drop-icon">📂</span>
+                  <span class="drop-icon">FILES</span>
                   <p>Drag &amp; Drop your game folder here</p>
                   <small>Includes HTML, CSS, and JS</small>
                 </div>
@@ -103,16 +94,16 @@
               Or Write / Paste Raw HTML Code
               <textarea id="html" required placeholder="<html>...</html>"></textarea>
             </label>
+            <button type="button" id="open-studio-btn" class="btn btn-editor" style="width: 100%; font-size: 1.05rem; padding: 0.85rem;">Open Code Studio</button>
             <div class="actions publish-actions">
-              <button type="button" id="preview-btn" class="btn btn-secondary" style="width: 100%; font-size: 1.05rem; padding: 0.85rem;">👁️ Preview App</button>
-              <button type="submit" id="publish-btn" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1rem;">🚀 Review &amp; Publish</button>
-              <button type="button" id="cancel-edit-btn" class="btn btn-danger hidden" style="width: 100%; font-size: 1rem; padding: 0.85rem;">✖ Cancel Edit</button>
+              <button type="button" id="preview-btn" class="btn btn-secondary" style="width: 100%; font-size: 1.05rem; padding: 0.85rem;">Preview App</button>
+              <button type="submit" id="publish-btn" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1rem;">Review &amp; Publish</button>
+              <button type="button" id="cancel-edit-btn" class="btn btn-danger hidden" style="width: 100%; font-size: 1rem; padding: 0.85rem;">Cancel Edit</button>
             </div>
           </form>
           <div id="review-result" class="result"></div>
         </section>
 
-        <!-- My Projects Panel -->
         <section class="panel hidden" id="my-projects-panel">
           <div class="panel-head">
             <h2>My Projects</h2>
@@ -121,12 +112,10 @@
             <p style="opacity: 0.5;">No projects yet.</p>
           </div>
         </section>
-
       </div>
     </div>
   </div>
 
-  <!-- Game Viewer (Full Screen Overlay) -->
   <div class="viewer-content hidden" id="viewer-content">
     <header class="viewer-header">
       <h2 id="viewer-title">App Name</h2>
@@ -135,17 +124,58 @@
     <iframe id="app-iframe" sandbox="allow-scripts allow-forms allow-modals allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"></iframe>
   </div>
 
-  <!-- Hidden placeholder to prevent app.js from breaking when it searches for this ID -->
-  <div id="viewer-placeholder" class="hidden"></div> 
+  <div id="viewer-placeholder" class="hidden"></div>
 
-  <!-- App Card Template -->
+  <section class="code-studio hidden" id="code-studio" aria-label="Code editor">
+    <header class="studio-bar">
+      <div class="studio-title">
+        <span class="burst">CODE</span>
+        <div>
+          <h2>Code Studio</h2>
+          <p>Live HTML editing with adjustable preview.</p>
+        </div>
+      </div>
+      <div class="studio-actions">
+        <button type="button" id="toggle-live-preview-btn" class="btn btn-small btn-secondary">Hide Preview</button>
+        <button type="button" id="close-studio-btn" class="btn btn-small btn-danger">Close</button>
+      </div>
+    </header>
+    <div class="studio-shell">
+      <section class="editor-pane">
+        <div class="pane-top">
+          <div class="window-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          <strong>index.html</strong>
+        </div>
+        <div class="editor-frame">
+          <pre id="line-numbers" class="line-numbers" aria-hidden="true">1</pre>
+          <textarea id="studio-code" spellcheck="false" aria-label="HTML code editor"></textarea>
+        </div>
+      </section>
+      <section class="preview-pane" id="studio-preview-pane">
+        <div class="pane-top preview-top">
+          <strong>Live Preview</strong>
+          <div class="preview-controls">
+            <label>
+              Width
+              <input type="range" id="preview-width-range" min="320" max="1440" value="900" step="10">
+            </label>
+            <output id="preview-width-output">900px</output>
+          </div>
+        </div>
+        <div class="preview-stage">
+          <iframe id="studio-preview" title="Live preview" sandbox="allow-scripts allow-forms allow-modals allow-same-origin allow-popups"></iframe>
+        </div>
+      </section>
+    </div>
+  </section>
+
   <template id="app-card-template">
     <article class="app-card" tabindex="0">
       <div class="squircle-icon">
         <div class="preview-viewport" aria-hidden="true">
-          <iframe class="app-preview" title="App preview" sandbox="allow-scripts allow-forms"></iframe>
+          <iframe class="app-preview" title="App preview" loading="lazy" sandbox=""></iframe>
         </div>
-        <span class="icon-text">🕹️</span>
+        <span class="icon-text">PLAY</span>
       </div>
       <div class="app-info">
         <h3 class="app-title"></h3>
@@ -154,7 +184,6 @@
     </article>
   </template>
 
-  <!-- My Project Card Template (Inside Sidebar) -->
   <template id="my-project-card-template">
     <div class="app-card my-project-card">
       <div class="app-info my-project-info">
@@ -169,7 +198,6 @@
   </template>
 
   <script>
-    // Handle the Options sidebar toggle independently from app.js
     const optionsOverlay = document.getElementById('options-overlay');
     document.getElementById('options-toggle-btn').addEventListener('click', () => {
       optionsOverlay.classList.remove('hidden');
@@ -177,7 +205,6 @@
     document.getElementById('close-options-btn').addEventListener('click', () => {
       optionsOverlay.classList.add('hidden');
     });
-    // Close on clicking outside the sidebar
     optionsOverlay.addEventListener('click', (e) => {
       if (e.target === e.currentTarget) {
         optionsOverlay.classList.add('hidden');
